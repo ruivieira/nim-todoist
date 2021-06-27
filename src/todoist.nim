@@ -43,58 +43,58 @@ type TodoistTask* = object
     # object representing task due date/time
     due*: Option[DueDate]
 
-  type TodoistProject* = object
-      id*: int  # Project ID
-      order*: Option[int] # Project position under the same parent (read-only)
-      color*: int # A numeric ID representing the color of the project icon
-      name*: string # Project name
-      comment_count*: int # Number of project comments
-      `shared`*: bool # Whether the project is shared
-      favorite*: bool # Whether the project is a favorite 
-      sync_id*: int # Identifier to find the match between different copies of shared projects
-      url*: string # URL to access this project in the Todoist web or mobile applications
+type TodoistProject* = object
+    id*: int            # Project ID
+    order*: Option[int] # Project position under the same parent (read-only)
+    color*: int         # A numeric ID representing the color of the project icon
+    name*: string       # Project name
+    comment_count*: int # Number of project comments
+    `shared`*: bool     # Whether the project is shared
+    favorite*: bool     # Whether the project is a favorite
+    sync_id*: int # Identifier to find the match between different copies of shared projects
+    url*: string        # URL to access this project in the Todoist web or mobile applications
 
 type TodoistLabel* = object
-    id*:int # Label ID
-    name*:string # Label name
-    color*:int # A numeric ID representing the color of the label icon
-    order*: int # Number used by clients to sort list of labels
+    id*: int        # Label ID
+    name*: string   # Label name
+    color*: int     # A numeric ID representing the color of the label icon
+    order*: int     # Number used by clients to sort list of labels
     favorite*: bool # Whether the label is a favorite
 
 type TodoistSection* = object
-    id*:int # Section id
+    id*: int         # Section id
     project_id*: int # ID of the project section belongs to
-    order*: int # Section position among other sections from the same project
-    name*: string # Section name
+    order*: int      # Section position among other sections from the same project
+    name*: string    # Section name
 
-proc newTodoist*(token: string) : Todoist =
+proc newTodoist*(token: string): Todoist =
     return Todoist(token: token, client: newHttpClient())
 
-proc buildGETRequest(todoist: Todoist, url: string) : Response =
+proc buildGETRequest(todoist: Todoist, url: string): Response =
     let headers = newHttpHeaders()
     headers["Authorization"] = "Bearer " & todoist.token
     let response = request(todoist.client, url, "GET", "", headers)
     return response
 
-proc getAll[T](todoist: Todoist, url: string) : seq[T] =
+proc getAll[T](todoist: Todoist, url: string): seq[T] =
     var results = newSeq[T]()
     let response = buildGETRequest(todoist, url)
     let json = parseJson(response.body)
     for item in json:
         results.add(to(item, T))
-    return results    
+    return results
 
 proc getSingle[T](todoist: Todoist, url: string): T =
     let response = buildGETRequest(todoist, url)
     let json = parseJson(response.body)
     return to(json, T)
 
-proc getActiveTasks*(todoist: Todoist) : seq[TodoistTask] =
+proc getActiveTasks*(todoist: Todoist): seq[TodoistTask] =
     let url = "https://api.todoist.com/rest/v1/tasks"
     let tasks = getAll[TodoistTask](todoist, url)
     return tasks
 
-proc getTask*(todoist: Todoist, id: int) : TodoistTask =
+proc getTask*(todoist: Todoist, id: int): TodoistTask =
     let url = "https://api.todoist.com/rest/v1/tasks/" & $id
     return getSingle[TodoistTask](todoist, url)
 
@@ -103,16 +103,17 @@ proc getAllProjects*(todoist: Todoist): seq[TodoistProject] =
     let projects = getAll[TodoistProject](todoist, url)
     return projects
 
-proc getProject*(todoist: Todoist, id: int) : TodoistProject =
+proc getProject*(todoist: Todoist, id: int): TodoistProject =
     let url = "https://api.todoist.com/rest/v1/projects/" & $id
     return getSingle[TodoistProject](todoist, url)
 
-proc getAllLabels*(todoist: Todoist) : seq[TodoistLabel] =
+proc getAllLabels*(todoist: Todoist): seq[TodoistLabel] =
     let url = "https://api.todoist.com/rest/v1/labels"
     let labels = getAll[TodoistLabel](todoist, url)
     return labels
 
-proc getProjectSections*(todoist: Todoist, project_id: int) : seq[TodoistSection] =
+proc getProjectSections*(todoist: Todoist, project_id: int): seq[
+        TodoistSection] =
     let url = "https://api.todoist.com/rest/v1/sections?project_id=" & $project_id
     let sections = getAll[TodoistSection](todoist, url)
     return sections
