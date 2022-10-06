@@ -73,7 +73,7 @@ proc newTodoist*(token: string): Todoist =
 proc buildGETRequest(todoist: Todoist, url: string): Response =
     let headers = newHttpHeaders()
     headers["Authorization"] = "Bearer " & todoist.token
-    let response = request(todoist.client, url, "GET", "", headers)
+    let response = request(todoist.client, url, HttpMethod.HttpGet, "", headers)
     return response
 
 proc getAll[T](todoist: Todoist, url: string): seq[T] =
