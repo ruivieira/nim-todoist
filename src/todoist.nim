@@ -47,7 +47,7 @@ type TodoistTask* = object
     due*: Option[DueDate]
 
 type TodoistProject* = object
-    id*: int            # Project ID
+    id*: string            # Project ID
     order*: Option[int] # Project position under the same parent (read-only)
     color*: int         # A numeric ID representing the color of the project icon
     name*: string       # Project name
