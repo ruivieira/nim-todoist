@@ -2,3 +2,4 @@ nimcache/
 nimblecache/
 htmldocs/
 .DS_Store
+.idea
