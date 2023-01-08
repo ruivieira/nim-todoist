@@ -1,8 +1,11 @@
 ## Todoist REST API client
 
 import httpclient
-import json
+import jsony
 import options
+import std/strformat
+
+const BASE_URL = "https://api.todoist.com/rest/v2"
 
 type Todoist = object
     token*: string
@@ -18,13 +21,13 @@ type DueDate* = object
 
 type TodoistTask* = object
     # Task ID
-    id*: int
+    id*: string
     # Task's project ID (read-only)
-    project_id*: int
+    project_id*: string
     # ID of section task belongs to
-    section_id*: int
+    section_id*: string
     # ID of parent task (read-only, absent for top-level tasks)
-    parent_id*: Option[int]
+    parent_id*: Option[string]
     # Position under the same parent or project for top-level tasks (read-only)
     order*: int
     # Task content. This value may contain markdown-formatted text and hyperlinks
@@ -74,46 +77,45 @@ proc buildGETRequest(todoist: Todoist, url: string): Response =
     let headers = newHttpHeaders()
     headers["Authorization"] = "Bearer " & todoist.token
     let response = request(todoist.client, url, HttpMethod.HttpGet, "", headers)
+    echo response.body
     return response
 
 proc getAll[T](todoist: Todoist, url: string): seq[T] =
-    var results = newSeq[T]()
     let response = buildGETRequest(todoist, url)
-    let json = parseJson(response.body)
-    for item in json:
-        results.add(to(item, T))
-    return results
+    echo response.body
+    let json = response.body.fromJson(seq[T])
+    return json
 
 proc getSingle[T](todoist: Todoist, url: string): T =
     let response = buildGETRequest(todoist, url)
-    let json = parseJson(response.body)
-    return to(json, T)
+    let json = response.body.fromJson(T)
+    return json
 
 proc getActiveTasks*(todoist: Todoist): seq[TodoistTask] =
-    let url = "https://api.todoist.com/rest/v1/tasks"
+    let url = &"{BASE_URL}/tasks"
     let tasks = getAll[TodoistTask](todoist, url)
     return tasks
 
 proc getTask*(todoist: Todoist, id: int): TodoistTask =
-    let url = "https://api.todoist.com/rest/v1/tasks/" & $id
+    let url = &"{BASE_URL}/tasks/" & $id
     return getSingle[TodoistTask](todoist, url)
 
 proc getAllProjects*(todoist: Todoist): seq[TodoistProject] =
-    let url = "https://api.todoist.com/rest/v1/projects"
+    let url = &"{BASE_URL}/projects"
     let projects = getAll[TodoistProject](todoist, url)
     return projects
 
 proc getProject*(todoist: Todoist, id: int): TodoistProject =
-    let url = "https://api.todoist.com/rest/v1/projects/" & $id
+    let url = &"{BASE_URL}/projects/" & $id
     return getSingle[TodoistProject](todoist, url)
 
 proc getAllLabels*(todoist: Todoist): seq[TodoistLabel] =
-    let url = "https://api.todoist.com/rest/v1/labels"
+    let url = &"{BASE_URL}/labels"
     let labels = getAll[TodoistLabel](todoist, url)
     return labels
 
 proc getProjectSections*(todoist: Todoist, project_id: int): seq[
         TodoistSection] =
-    let url = "https://api.todoist.com/rest/v1/sections?project_id=" & $project_id
+    let url = &"{BASE_URL}/sections?project_id=" & $project_id
     let sections = getAll[TodoistSection](todoist, url)
     return sections
